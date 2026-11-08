@@ -4,339 +4,414 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#151b22">
 <title>WORLD DOMINION</title>
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-* { box-sizing:border-box; }
-
-body {
-  margin:0;
-  background:#171d25;
-  color:#e1e5e9;
-  font-family:Arial,sans-serif;
-  overflow:hidden;
+:root{
+ --bg:#151b22;--panel:#202832;--panel2:#27323e;--line:#3a4653;
+ --text:#e6e9ed;--muted:#9aa6b2;--gold:#c6a46a;--gold2:#e0c18a;
+ --green:#6d9b7d;--red:#b66b68;--blue:#6e91b3;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,select{font:inherit}
+button{cursor:pointer}
+#start-screen{
+ position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;
+ background:linear-gradient(115deg,rgba(10,14,19,.97),rgba(23,31,40,.94)),
+ radial-gradient(ellipse at 75% 35%,#53606a 0%,transparent 55%);
+}
+.start-card{width:min(620px,92vw);padding:42px;background:rgba(27,35,44,.97);border:1px solid #52606c;
+ box-shadow:0 24px 80px #0009;border-radius:8px}
+.eyebrow{color:var(--gold2);letter-spacing:4px;font-size:11px;font-weight:bold}
+.start-title{font-size:clamp(36px,7vw,62px);letter-spacing:2px;margin:12px 0 4px;font-weight:800}
+.start-sub{color:#aab3bc;letter-spacing:2px;font-size:12px;margin-bottom:34px}
+.start-rule{height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:24px 0}
+.field-label{display:block;color:#c3cbd2;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;margin:0 0 10px}
+.country-picker{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:center}
+.flag-preview{height:48px;background:#111820;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:28px;border-radius:3px}
+select{width:100%;height:48px;background:#111820;color:var(--text);border:1px solid #52606c;border-radius:3px;padding:0 12px;outline:none}
+.start-button{width:100%;height:52px;margin-top:24px;background:linear-gradient(#cbb17f,#a98a55);border:1px solid #e1c895;color:#171b20;font-weight:800;letter-spacing:2px;border-radius:3px}
+.start-button:disabled{opacity:.45;cursor:wait}
+.start-note{font-size:11px;color:#87939e;margin-top:16px;line-height:1.6}
+#loading{display:none;color:var(--gold2);font-size:12px;margin-top:12px}
+#game{display:none;height:100dvh;width:100vw;min-width:0;min-height:0;grid-template-rows:58px minmax(0,1fr)}
+.topbar{display:flex;align-items:center;justify-content:space-between;background:#1c242d;border-bottom:1px solid var(--line);padding:0 16px;gap:16px}
+.brand{font-size:17px;font-weight:800;letter-spacing:2px;white-space:nowrap}
+.brand span{color:var(--gold)}
+.top-stats{display:flex;align-items:center;gap:24px;flex:1;justify-content:center}
+.top-stat{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.top-stat b{display:block;color:#e2e5e8;font-size:13px;margin-top:4px;letter-spacing:0}
+.date-controls{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.date{font-size:12px;color:var(--gold2);margin-right:6px}
+.speed{background:#303c49;color:#e6e9ed;border:1px solid #536171;padding:7px 9px;border-radius:2px;font-size:11px}
+.speed.active{background:#a98a55;color:#151b22;border-color:#d4b77f}
+.main{display:grid;grid-template-columns:190px minmax(350px,1fr) 300px;min-height:0}
+.sidebar{background:#1c242d;border-right:1px solid var(--line);padding:12px 9px;overflow:auto}
+.nav-title{font-size:9px;letter-spacing:2px;color:#7f8b97;padding:10px 9px}
+.nav-btn{width:100%;border:1px solid transparent;background:transparent;color:#c2cbd3;text-align:left;padding:12px 10px;margin:2px 0;border-radius:3px;font-size:12px}
+.nav-btn:hover,.nav-btn.active{background:#303c49;border-color:#52606c;color:#fff}
+.nav-btn .ico{display:inline-block;width:25px;color:var(--gold2)}
+.map-wrap{position:relative;min-width:0;min-height:0;background:#71827f}
+#map{width:100%;height:100%;background:#71827f}
+.map-overlay{position:absolute;top:12px;left:12px;z-index:500;background:#1c242de8;border:1px solid #596674;padding:9px 12px;font-size:10px;letter-spacing:1px;color:#d5dbe0;pointer-events:none}
+.map-legend{position:absolute;bottom:15px;left:12px;z-index:500;background:#1c242de8;border:1px solid #596674;padding:10px 12px;font-size:10px;color:#c2cbd3}
+.right-panel{background:#1c242d;border-left:1px solid var(--line);padding:16px;overflow:auto}
+.country-heading{display:flex;align-items:center;gap:12px;padding-bottom:15px;border-bottom:1px solid var(--line)}
+.country-flag{width:48px;height:32px;object-fit:cover;background:#111820;border:1px solid #58636e}
+.country-name{font-size:18px;font-weight:bold}
+.country-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.panel-section{padding:14px 0;border-bottom:1px solid #35414c}
+.section-title{font-size:10px;color:var(--gold2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:11px}
+.data-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin:9px 0;color:#aeb8c1}
+.data-row b{color:#e2e6e9;font-weight:600;text-align:right}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.action-btn{background:#303c49;border:1px solid #526171;color:#dce2e7;padding:10px 7px;font-size:10px;border-radius:2px}
+.action-btn:hover{border-color:var(--gold);color:var(--gold2)}
+#event-log{font-size:10px;line-height:1.6;color:#aeb8c1;max-height:130px;overflow:auto}
+.leaflet-container{font:inherit}
+.leaflet-control-zoom a{background:#202832!important;color:#eee!important;border-color:#536171!important}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#202832;color:#eee}
+.leaflet-popup-content{margin:10px;font-size:12px}
+.leaflet-interactive:focus{outline:none}
+.modal{position:fixed;inset:0;background:#0009;z-index:1500;display:none;align-items:center;justify-content:center}
+.modal-box{width:min(520px,90vw);background:#202832;border:1px solid #596674;padding:24px;box-shadow:0 20px 60px #0009}
+.modal-box h2{margin:0 0 14px;font-size:19px}
+.modal-box p{color:#b7c0c8;font-size:12px;line-height:1.6}
+.modal-close{float:right;background:none;color:#ddd;border:0;font-size:22px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#202832;border:1px solid #657383;padding:11px 18px;z-index:3000;font-size:12px;display:none}
+@media(max-width:1100px) and (min-width:701px){
+ .main{grid-template-columns:160px minmax(280px,1fr) 260px}
+ .top-stats{gap:12px}
+}
+@media(max-width:700px){
+ html,body{overflow:hidden}
+ #game{height:100dvh;grid-template-rows:54px minmax(0,1fr)}
+ .topbar{padding:0 9px;gap:7px}
+ .brand{font-size:12px;letter-spacing:1px}
+ .top-stats{display:none}
+ .date-controls{margin-left:auto;gap:4px}
+ .date{font-size:10px;margin-right:2px}
+ .speed{padding:7px 7px;font-size:10px}
+ .main{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:48px minmax(190px,39dvh) minmax(170px,1fr);min-height:0}
+ .sidebar{grid-row:1;grid-column:1;display:flex;align-items:center;gap:4px;padding:4px 7px;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);white-space:nowrap}
+ .nav-title{display:none}
+ .nav-btn{width:auto;flex:0 0 auto;margin:0;padding:9px 10px;font-size:10px}
+ .nav-btn .ico{width:auto;margin-right:5px}
+ .map-wrap{grid-row:2;grid-column:1;min-height:0}
+ #map{height:100%;min-height:190px}
+ .map-overlay{top:7px;left:7px;padding:6px 8px;font-size:8px}
+ .map-legend{bottom:7px;left:7px;padding:6px 8px;font-size:8px}
+ .right-panel{grid-row:3;grid-column:1;border-left:0;border-top:1px solid var(--line);padding:11px 13px;min-height:0}
+ .country-flag{width:40px;height:27px}
+ .country-name{font-size:15px}
+ .panel-section{padding:10px 0}
+ .section-title{font-size:9px;margin-bottom:8px}
+ .data-row{font-size:10px;margin:7px 0}
+ .action-btn{font-size:10px;padding:10px 6px}
+ .start-card{padding:25px 20px}
+ .start-title{font-size:43px}
+ .start-sub{font-size:10px;margin-bottom:22px}
+ .start-rule{margin:18px 0}
+ .start-note{font-size:10px}
+}
+@media(max-width:380px){
+ .brand{font-size:10px}
+ .date{font-size:9px}
+ .speed{padding:6px 5px}
+ .main{grid-template-rows:44px minmax(175px,36dvh) minmax(160px,1fr)}
+ .nav-btn{padding:8px 7px;font-size:9px}
 }
 
-header {
-  height:65px;
-  background:#202934;
-  border-bottom:1px solid #394451;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 20px;
+/* WORLD DOMINION — acabado editorial de gran estrategia */
+:root{
+ --bg:#101820;--panel:#202a34;--panel2:#2a3743;--line:#59636a;
+ --text:#eee9dd;--muted:#b0b5b6;--gold:#b89558;--gold2:#e4c88e;
 }
-
-.logo {
-  font-size:21px;
-  font-weight:bold;
-  letter-spacing:2px;
+body{background:
+ radial-gradient(ellipse at 48% 45%,rgba(82,94,91,.16),transparent 58%),
+ repeating-linear-gradient(135deg,rgba(255,255,255,.012) 0 1px,transparent 1px 4px),
+ #111820}
+.start-card,.right-panel,.sidebar,.topbar,.modal-box{
+ background-image:linear-gradient(145deg,rgba(255,255,255,.035),transparent 42%),
+ repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0 1px,transparent 1px 3px);
 }
-
-.stats {
-  display:flex;
-  gap:20px;
-  font-size:12px;
-}
-
-.stat strong {
-  display:block;
-  color:#d6b779;
-  font-size:15px;
-  margin-top:4px;
-}
-
-main {
-  display:flex;
-  height:calc(100vh - 65px);
-}
-
-nav {
-  width:190px;
-  background:#202934;
-  border-right:1px solid #394451;
-  padding:15px 10px;
-  flex-shrink:0;
-}
-
-nav button {
-  width:100%;
-  padding:13px 10px;
-  margin-bottom:5px;
-  text-align:left;
-  background:transparent;
-  border:1px solid transparent;
-  color:#c6cdd5;
-  cursor:pointer;
-  font-size:13px;
-  border-radius:4px;
-}
-
-nav button:hover,
-nav button.active {
-  background:#344252;
-  border-color:#536273;
-  color:white;
-}
-
-#map {
-  flex:1;
-  background:#82928d;
-  min-width:0;
-}
-
-aside {
-  width:275px;
-  background:#202934;
-  border-left:1px solid #394451;
-  padding:18px;
-  overflow-y:auto;
-  flex-shrink:0;
-}
-
-h2 {
-  font-size:17px;
-  margin-top:0;
-}
-
-.section {
-  border-bottom:1px solid #394451;
-  padding:13px 0;
-}
-
-.label {
-  color:#929eaa;
-  font-size:11px;
-  text-transform:uppercase;
-}
-
-.value {
-  font-size:15px;
-  margin-top:6px;
-}
-
-.action {
-  width:100%;
-  padding:11px;
-  margin-top:8px;
-  background:#35485b;
-  color:white;
-  border:1px solid #53677c;
-  border-radius:4px;
-  cursor:pointer;
-}
-
-#timeline {
-  position:absolute;
-  bottom:15px;
-  left:210px;
-  background:#202934;
-  border:1px solid #536273;
-  border-radius:5px;
-  padding:10px 15px;
-  display:flex;
-  gap:12px;
-  align-items:center;
-  z-index:500;
-  font-size:13px;
-}
-
-#timeline button {
-  background:#35485b;
-  color:white;
-  border:0;
-  padding:7px 11px;
-  border-radius:3px;
-}
-
-.leaflet-container {
-  background:#82928d;
-}
-
-@media(max-width:850px) {
-  nav { width:145px; }
-  aside { width:220px; }
-  .stats { display:none; }
-  #timeline { left:155px; }
-}
-
-@media(max-width:600px) {
-  nav { width:65px; }
-  nav button { font-size:0; text-align:center; }
-  aside { width:180px; padding:10px; }
-  #timeline { left:70px; }
+.start-card{border:1px solid #8d754f;outline:1px solid rgba(210,180,126,.18);outline-offset:5px;border-radius:2px;
+ box-shadow:0 28px 90px #000b,inset 0 0 38px #c49a3d0b}
+.start-title{font-family:Georgia,serif;letter-spacing:3px;text-shadow:0 3px 14px #000}
+.start-sub{color:#c6b38f}
+.start-rule{height:2px;background:linear-gradient(90deg,#8f6b37,#e4c88e 35%,#8f6b37 70%,transparent)}
+.field-label,.section-title,.nav-title{font-weight:800}
+.flag-preview{border:2px solid #8b754f;border-radius:2px;box-shadow:inset 0 0 12px #0008}
+select{border:1px solid #806b4c;border-radius:2px;box-shadow:inset 0 2px 8px #0007}
+.start-button{border-radius:2px;background:linear-gradient(#e0c58f,#b28a4c 52%,#8d6937);box-shadow:inset 0 1px #fff8,0 4px 12px #0008;font-family:Georgia,serif;font-size:14px}
+.topbar{background:linear-gradient(180deg,#303b45,#1b252f 70%,#131c24);border-bottom:2px solid #92764b;box-shadow:0 4px 14px #0008}
+.brand{font-family:Georgia,serif;font-size:19px;letter-spacing:2.5px;text-shadow:0 2px 8px #000}
+.brand span{color:#d2b176}
+.top-stat{padding:5px 12px;border-left:1px solid #59636a;background:linear-gradient(90deg,#ffffff08,transparent)}
+.top-stat b{font-family:Georgia,serif;color:#f0dfb9}
+.speed{border-radius:2px;background:linear-gradient(#48535d,#28333d);border:1px solid #7c817d;box-shadow:inset 0 1px #ffffff20}
+.speed.active{background:linear-gradient(#e0c58f,#a47b40);border-color:#e7d3a8}
+.sidebar{background-color:#1a242e;border-right:2px solid #786343;box-shadow:4px 0 14px #0005}
+.nav-title{color:#d0b27a;border-bottom:1px solid #5a4b36;padding-bottom:8px}
+.nav-btn{border-radius:2px;border-bottom:1px solid #ffffff0b;font-weight:600;letter-spacing:.2px}
+.nav-btn:hover,.nav-btn.active{background:linear-gradient(90deg,#49525a,#303b45);border:1px solid #9b8054;box-shadow:inset 3px 0 #d2b176;color:#fff2d8}
+.nav-btn .ico{color:#d2b176;font-size:15px}
+.map-wrap{background:#71847f;border:3px solid #29343c;box-shadow:inset 0 0 28px #0008}
+#map{background:radial-gradient(ellipse at 50% 45%,#29434c 0%,#1a303a 65%,#13232d 100%)}
+.map-overlay,.map-legend{background:linear-gradient(135deg,#17232def,#28333bef);border:1px solid #9b8054;box-shadow:0 4px 15px #0008;color:#f0e3c7}
+.right-panel{background-color:#202a34;border-left:2px solid #786343;box-shadow:-4px 0 14px #0005}
+.country-heading{border-bottom:2px solid #806a48;padding-bottom:17px}
+.country-flag{border:2px solid #a58a5c;box-shadow:0 2px 8px #0008}
+.country-name{font-family:Georgia,serif;font-size:20px;color:#f2e7d0}
+.country-sub{letter-spacing:1.5px;color:#c2a977;font-weight:700}
+.panel-section{border-bottom:1px solid #59636a;background:linear-gradient(90deg,#ffffff05,transparent);padding-left:8px;padding-right:8px}
+.section-title{font-family:Georgia,serif;color:#dfc18a;letter-spacing:1.8px;text-shadow:0 1px #000}
+.data-row{border-bottom:1px dotted #5b646a;padding-bottom:5px}
+.data-row b{color:#f0e7d6}
+.action-btn{border-radius:2px;background:linear-gradient(#48545e,#2a3640);border:1px solid #7b765f;box-shadow:inset 0 1px #ffffff22,0 2px 5px #0005;font-weight:700;letter-spacing:.2px}
+.action-btn:hover{background:linear-gradient(#806b4a,#4d402e);border-color:#dfc18a;color:#fff1cf}
+.modal-box{border:1px solid #a28758;outline:1px solid #51432f;outline-offset:4px;border-radius:2px}
+.modal-box h2{font-family:Georgia,serif;color:#e4c88e}
+.creator-mark{position:fixed;right:12px;bottom:8px;z-index:1200;padding:7px 12px;
+ color:#e4c88e;background:linear-gradient(135deg,#26313aee,#111820f2);
+ border:1px solid #94764b;box-shadow:0 3px 12px #0009,inset 0 1px #ffffff22;
+ font:700 11px Georgia,serif;letter-spacing:1.8px;text-shadow:0 1px #000;pointer-events:none}
+.leaflet-container{background:#1a303a}
+.leaflet-control-zoom a{border:1px solid #987d50!important}
+@media(max-width:700px){
+ .creator-mark{right:7px;bottom:5px;padding:5px 8px;font-size:9px;letter-spacing:1px}
+ .brand{font-size:11px}
+ .topbar{border-bottom-width:1px}
+ .sidebar{border-bottom:2px solid #786343}
+ .right-panel{border-top:2px solid #786343}
 }
 </style>
 </head>
-
 <body>
-
-<header>
-  <div class="logo">WORLD DOMINION</div>
-  <div class="stats">
-    <div class="stat">TESORO<strong>—</strong></div>
-    <div class="stat">PIB<strong>—</strong></div>
-    <div class="stat">POBLACIÓN<strong>—</strong></div>
-    <div class="stat">ESTABILIDAD<strong>—</strong></div>
+<section id="start-screen">
+ <div class="start-card">
+  <div class="eyebrow">GRAND STRATEGY • SANDBOX GLOBAL</div>
+  <div class="start-title">WORLD<br>DOMINION</div>
+  <div class="start-sub">EL MUNDO ESTÁ EN TUS MANOS</div>
+  <div class="start-rule"></div>
+  <label class="field-label" for="country-select">Selecciona el país con el que quieres iniciar</label>
+  <div class="country-picker">
+   <div class="flag-preview" id="start-flag">🌐</div>
+   <select id="country-select" disabled><option>Cargando países del mundo...</option></select>
   </div>
-  <div id="date">01/01/2026</div>
-</header>
+  <button class="start-button" id="start-button" disabled>EMPEZAR PARTIDA</button>
+  <div id="loading">Cargando mapa y países…</div>
+  <div class="start-note">Partida sandbox · Fecha inicial: 1 de enero de 2026<br>Elige cualquier país del mundo. Cada país tendrá su propia bandera e identidad.</div>
+ </div>
+</section>
 
-<main>
-
-<nav>
-  <button class="active" onclick="setTab(this,'Mapa mundial')">🌍 Mapa</button>
-  <button onclick="setTab(this,'Economía')">📊 Economía</button>
-  <button onclick="setTab(this,'Militar')">⚔ Militar</button>
-  <button onclick="setTab(this,'Diplomacia')">🤝 Diplomacia</button>
-  <button onclick="setTab(this,'Gobierno')">🏛 Gobierno</button>
-  <button onclick="setTab(this,'Acciones')">⚡ Acciones</button>
-  <button onclick="setTab(this,'Progreso')">🏆 Progreso</button>
-</nav>
-
-<div id="map"></div>
-
-<aside>
-  <h2 id="panel-title">Información territorial</h2>
-  <div class="section">
-    <div class="label">País seleccionado</div>
-    <div class="value" id="country">Ninguno</div>
+<div id="game">
+ <header class="topbar">
+  <div class="brand">WORLD <span>DOMINION</span></div>
+  <div class="top-stats">
+   <div class="top-stat">Tesoro<b id="treasury">—</b></div>
+   <div class="top-stat">PIB<b id="gdp">—</b></div>
+   <div class="top-stat">Población<b id="population">—</b></div>
+   <div class="top-stat">Estabilidad<b id="stability">—</b></div>
   </div>
-
-  <div class="section">
-    <div class="label">Código del país</div>
-    <div class="value" id="code">—</div>
+  <div class="date-controls">
+   <span class="date" id="date">01 ENE 2026</span>
+   <button class="speed active" data-speed="0">Ⅱ</button>
+   <button class="speed" data-speed="1">1×</button>
+   <button class="speed" data-speed="2">2×</button>
+   <button class="speed" data-speed="4">4×</button>
   </div>
-
-  <div class="section">
-    <div class="label">Información económica</div>
-    <div class="value">Pendiente de implementar</div>
-  </div>
-
-  <div class="section">
-    <div class="label">Información militar</div>
-    <div class="value">Pendiente de implementar</div>
-  </div>
-
-  <button class="action" onclick="alert('Sistema en desarrollo')">
-    Ver información completa
-  </button>
-</aside>
-
-</main>
-
-<div id="timeline">
-  <strong id="clock">PAUSADO</strong>
-  <button onclick="setSpeed(0)">Ⅱ</button>
-  <button onclick="setSpeed(1)">▶</button>
-  <button onclick="setSpeed(2)">2×</button>
-  <button onclick="setSpeed(4)">4×</button>
-  <button onclick="setSpeed(8)">8×</button>
+ </header>
+ <div class="main">
+  <nav class="sidebar">
+   <div class="nav-title">CENTRO DE MANDO</div>
+   <button class="nav-btn active" data-tab="Resumen"><span class="ico">▦</span>Resumen nacional</button>
+   <button class="nav-btn" data-tab="Economía"><span class="ico">◈</span>Economía</button>
+   <button class="nav-btn" data-tab="Militar"><span class="ico">⚔</span>Militar</button>
+   <button class="nav-btn" data-tab="Diplomacia"><span class="ico">♧</span>Diplomacia</button>
+   <button class="nav-btn" data-tab="Gobierno"><span class="ico">▤</span>Gobierno</button>
+   <button class="nav-btn" data-tab="Acciones"><span class="ico">✦</span>Acciones</button>
+   <button class="nav-btn" data-tab="Provincias"><span class="ico">⌖</span>Territorios</button>
+   <div class="nav-title">MUNDO</div>
+   <button class="nav-btn" data-tab="Noticias"><span class="ico">▣</span>Noticias</button>
+   <button class="nav-btn" id="save-button"><span class="ico">▣</span>Guardar partida</button>
+   <button class="nav-btn" id="menu-button"><span class="ico">↩</span>Menú principal</button>
+  </nav>
+  <section class="map-wrap">
+   <div id="map"></div>
+   <div class="map-overlay">MAPA POLÍTICO MUNDIAL · 2026</div>
+   <div class="map-legend">● País seleccionado &nbsp; ● Otros estados<br><span style="color:#c6a46a">◆</span> Selecciona cualquier país para inspeccionarlo</div>
+  </section>
+  <aside class="right-panel" id="right-panel">
+   <div class="country-heading">
+    <img class="country-flag" id="player-flag" alt="Bandera">
+    <div><div class="country-name" id="player-name">—</div><div class="country-sub">PAÍS DEL JUGADOR</div></div>
+   </div>
+   <div id="panel-content"></div>
+  </aside>
+ </div>
 </div>
 
+<div class="modal" id="modal"><div class="modal-box"><button class="modal-close" id="modal-close">×</button><h2 id="modal-title"></h2><div id="modal-body"></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="creator-mark" aria-label="Creado por bvilla">@bvilla</div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="https://unpkg.com/topojson-client@3"></script>
 <script>
-const map = L.map('map', {
-  center:[25,0],
-  zoom:2,
-  minZoom:2,
-  worldCopyJump:true
-});
-
-let selectedLayer = null;
-
-function selectCountry(feature, layer) {
-  if(selectedLayer) {
-    selectedLayer.setStyle({
-      fillColor:'#647b80',
-      fillOpacity:0.85,
-      color:'#303a40',
-      weight:0.7
-    });
-  }
-
-  selectedLayer = layer;
-
-  layer.setStyle({
-    fillColor:'#c3a46c',
-    fillOpacity:1,
-    color:'#ffffff',
-    weight:1.8
+const GEO_URL='https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
+const CODES_URL='https://unpkg.com/country-json@2.3.0/src/country-by-abbreviation.json';
+const GEO_CACHE='wd_topology_50m_v1', CODES_CACHE='wd_country_codes_v1';
+let geoData=null, map=null, countryLayers=[], featureLayerMap=new Map(), selectedFeature=null, selectedLayer=null;
+let player=null, speed=0, gameDate=new Date(2026,0,1), timer=null, countryCodes={};
+let state={treasury:85000,gdp:0,population:0,stability:78,army:0,relations:50,events:[]};
+const $=id=>document.getElementById(id);
+function propsOf(f){return f.properties||{}}
+function normalizeName(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+const nameAliases={
+ 'unitedstatesofamerica':'US','unitedstates':'US','russianfederation':'RU','russia':'RU',
+ 'republicofkorea':'KR','southkorea':'KR','korearepublicof':'KR','democraticpeoplesrepublicofkorea':'KP',
+ 'northkorea':'KP','iranislamicrepublicof':'IR','iran':'IR','syrianarabrepublic':'SY','syria':'SY',
+ 'vietname':'VN','vietnam':'VN','czechia':'CZ','czechrepublic':'CZ','turkiye':'TR','turkey':'TR',
+ 'bolivarianrepublicofvenezuela':'VE','venezuela':'VE','plurinationalstateofbolivia':'BO','bolivia':'BO',
+ 'bruneidarussalam':'BN','brunei':'BN','laopeoplesdemocraticrepublic':'LA','laos':'LA',
+ 'republicofmoldova':'MD','moldova':'MD','tanzaniaunitedrepublicof':'TZ','unitedrepublicoftanzania':'TZ',
+ 'congodemocraticrepublicofthe':'CD','democraticrepublicofthecongo':'CD','drcongo':'CD',
+ 'congorepublicofthe':'CG','republicofthecongo':'CG','ivorycoast':'CI','cotedivoire':'CI',
+ 'capeverde':'CV','cabo verde':'CV','eswatini':'SZ','swaziland':'SZ','northmacedonia':'MK',
+ 'macedonia':'MK','palestine':'PS','stateofpalestine':'PS','kosovo':'XK',
+ 'holysee':'VA','vaticancity':'VA','vaticancitystate':'VA','micronesia':'FM',
+ 'federatedstatesofmicronesia':'FM','bahamas':'BS','thebahamas':'BS','gambia':'GM','thegambia':'GM',
+ 'taiwan':'TW','taiwanprovinceofchina':'TW'
+};
+function getName(f){let p=propsOf(f);return p.ADMIN||p.name||p.NAME||p.name_en||'Estado desconocido'}
+function getISO2(f){let p=propsOf(f);let c=p.ISO_A2||p.iso_a2||p.ISO2||p.iso2||countryCodes[normalizeName(getName(f))]||nameAliases[normalizeName(getName(f))]||'';return c&&c!=='-99'?String(c).toLowerCase():''}
+function getISO3(f){let p=propsOf(f);return p.ISO_A3||p.iso_a3||p.ADM0_A3||f.id||''}
+function flagURL(f){let code=getISO2(f);return code?`https://flagcdn.com/w80/${code}.png`:''}
+function flagEmoji(f){let code=getISO2(f).toUpperCase();return code.length===2?String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0))):'🌐'}
+function showToast(msg){$('toast').textContent=msg;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2400)}
+function setFlag(img,f){let u=flagURL(f);img.src=u||'';img.onerror=()=>{img.style.display='none'};img.style.display=u?'block':'none'}
+function findFeatureByName(name){return geoData.features.find(f=>getName(f)===name)}
+function sortedCountries(){return geoData.features.filter(f=>getName(f)!=='Antarctica').sort((a,b)=>getName(a).localeCompare(getName(b),'es'))}
+async function cachedJSON(url,key){
+ try{const cached=localStorage.getItem(key);if(cached)return JSON.parse(cached)}catch(e){}
+ const response=await fetch(url,{cache:'force-cache'});if(!response.ok)throw new Error('No se pudo descargar '+url);
+ const data=await response.json();try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}
+ return data;
+}
+async function init(){
+ $('loading').style.display='block';$('loading').textContent='Preparando atlas mundial optimizado…';
+ try{
+  const [topology,codes]=await Promise.all([cachedJSON(GEO_URL,GEO_CACHE),cachedJSON(CODES_URL,CODES_CACHE)]);
+  codes.forEach(item=>{if(item.country&&item.abbreviation)countryCodes[normalizeName(item.country)]=item.abbreviation});
+  const converted=topojson.feature(topology,topology.objects.countries);
+  converted.features.forEach(f=>{
+   const nm=f.properties?.name||'Estado desconocido';
+   f.properties=f.properties||{};f.properties.ADMIN=nm;
+   const key=normalizeName(nm);
+   f.properties.ISO_A2=countryCodes[key]||nameAliases[key]||'';
+   f.properties.ISO_A3=String(f.id||'');
   });
-
-  const p = feature.properties || {};
-  const name = p.ADMIN || p.name || p.NAME || 'Territorio';
-  const code = p.ISO_A3 || p.iso_a3 || '—';
-
-  document.getElementById('country').textContent = name;
-  document.getElementById('code').textContent = code;
+  geoData={type:'FeatureCollection',features:converted.features};
+  const countries=sortedCountries();$('country-select').innerHTML='';
+  countries.forEach(f=>{let o=document.createElement('option');o.value=getName(f);o.textContent=flagEmoji(f)+'  '+getName(f);$('country-select').appendChild(o)});
+  $('country-select').disabled=false;$('start-button').disabled=false;
+  updateStartFlag();$('country-select').addEventListener('change',updateStartFlag);
+  $('loading').textContent=`Atlas listo · ${countries.length} países y territorios · caché activada`;
+ }catch(e){$('loading').textContent='No se pudo cargar el atlas. Comprueba tu conexión y recarga.';console.error(e)}
 }
-
-fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-.then(response => {
-  if(!response.ok) throw new Error('No se pudo cargar el mapa');
-  return response.json();
-})
-.then(data => {
-  L.geoJSON(data, {
-    style: {
-      fillColor:'#647b80',
-      fillOpacity:0.85,
-      color:'#303a40',
-      weight:0.7
-    },
-    onEachFeature:(feature,layer) => {
-      layer.on({
-        click:() => selectCountry(feature,layer),
-        mouseover:() => {
-          if(layer !== selectedLayer)
-            layer.setStyle({fillColor:'#a0b1a7'});
-        },
-        mouseout:() => {
-          if(layer !== selectedLayer)
-            layer.setStyle({fillColor:'#647b80'});
-        }
-      });
-    }
-  }).addTo(map);
-})
-.catch(error => {
-  document.getElementById('country').textContent =
-    'Error cargando el mapa';
-  console.error(error);
-});
-
-function setTab(button,name) {
-  document.querySelectorAll('nav button')
-    .forEach(b => b.classList.remove('active'));
-
-  button.classList.add('active');
-  document.getElementById('panel-title').textContent = name;
+function updateStartFlag(){let f=findFeatureByName($('country-select').value);$('start-flag').textContent=f?flagEmoji(f):'🌐'}
+function startGame(){
+ const f=findFeatureByName($('country-select').value);if(!f)return;
+ player=f;state.treasury=85000;state.gdp=estimateGDP(f);state.population=estimatePopulation(f);state.stability=78;state.army=Math.max(12,Math.round(state.population/1800000));state.events=[`Has iniciado una nueva partida como ${getName(f)}.`];
+ $('start-screen').style.display='none';$('game').style.display='grid';
+ $('player-name').textContent=getName(player);setFlag($('player-flag'),player);
+ createMap();updateTop();renderTab('Resumen');showToast('Partida iniciada: '+getName(player));
 }
-
-let speed = 0;
-let date = new Date(2026,0,1);
-
-function setSpeed(value) {
-  speed = value;
-  document.getElementById('clock').textContent =
-    value === 0 ? 'PAUSADO' : value+'×';
+function estimatePopulation(f){let n=getName(f).toLowerCase();const known={'china':1400000000,'india':1420000000,'united states of america':335000000,'united states':335000000,'spain':49000000,'russia':144000000,'france':68000000,'germany':84000000,'japan':124000000,'brazil':216000000,'united kingdom':68000000,'canada':40000000,'australia':27000000,'switzerland':9000000};return known[n]||Math.round(4000000+Math.random()*65000000)}
+function estimateGDP(f){return Math.round(20+Math.random()*1200)}
+function createMap(){
+ if(map){map.remove();map=null}
+ map=L.map('map',{center:[22,0],zoom:2,minZoom:2,maxZoom:7,worldCopyJump:true,zoomControl:true,preferCanvas:true});
+ const renderer=L.canvas({padding:.35});
+ featureLayerMap=new Map();countryLayers=[];
+ const countries=L.geoJSON(geoData,{
+  renderer,
+  style:feature=>({color:'#28363b',weight:.75,fillColor:'#87988d',fillOpacity:.92}),
+  onEachFeature:(feature,layer)=>{
+   const name=getName(feature);featureLayerMap.set(name,layer);countryLayers.push({feature,layer});
+   layer.on('mouseover',()=>{if(layer!==selectedLayer)layer.setStyle({fillColor:'#c3b58e',weight:1.1})});
+   layer.on('mouseout',()=>{if(layer!==selectedLayer)layer.setStyle({fillColor:'#87988d',weight:.75})});
+   layer.on('click',()=>selectCountry(feature,layer));
+  }
+ }).addTo(map);
+ setTimeout(()=>map && map.invalidateSize(),180);
+ const target=featureLayerMap.get(getName(player));
+ if(target){selectedFeature=player;selectedLayer=target;target.setStyle({fillColor:'#c6a46a',fillOpacity:1,color:'#f0d7a5',weight:1.6});try{map.fitBounds(target.getBounds(),{padding:[30,30],maxZoom:4})}catch(e){}}
 }
-
-setInterval(() => {
-  if(speed === 0) return;
-
-  date.setDate(date.getDate()+speed);
-
-  document.getElementById('date').textContent =
-    String(date.getDate()).padStart(2,'0')+'/' +
-    String(date.getMonth()+1).padStart(2,'0')+'/' +
-    date.getFullYear();
-},1000);
+function selectCountry(feature,layer){
+ if(selectedLayer)selectedLayer.setStyle({fillColor:getName(selectedFeature)===getName(player)?'#c6a46a':'#87988d',fillOpacity:.92,color:'#28363b',weight:.75});
+ selectedFeature=feature;selectedLayer=layer;layer.setStyle({fillColor:'#d0ad70',fillOpacity:1,color:'#fff0cb',weight:1.5});
+ renderCountryInspection(feature);
+}
+function updateTop(){
+ $('treasury').textContent='€'+Math.round(state.treasury).toLocaleString('es-ES')+' M';
+ $('gdp').textContent=state.gdp.toLocaleString('es-ES')+' mil M';
+ $('population').textContent=(state.population/1000000).toFixed(1)+' M';
+ $('stability').textContent=state.stability+'%';
+}
+function renderTab(tab){
+ document.querySelectorAll('.nav-btn[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+ const p=$('panel-content');
+ const common=`<div class="panel-section"><div class="section-title">Situación nacional</div>
+ <div class="data-row"><span>Tesoro público</span><b>€${Math.round(state.treasury).toLocaleString('es-ES')} M</b></div>
+ <div class="data-row"><span>PIB estimado</span><b>${state.gdp.toLocaleString('es-ES')} mil M</b></div>
+ <div class="data-row"><span>Población</span><b>${(state.population/1000000).toFixed(1)} M</b></div>
+ <div class="data-row"><span>Estabilidad</span><b>${state.stability}%</b></div></div>`;
+ let content='';
+ if(tab==='Resumen')content=common+`<div class="panel-section"><div class="section-title">Gobierno y sociedad</div><div class="data-row"><span>Régimen</span><b>Por determinar</b></div><div class="data-row"><span>Ideología</span><b>Por determinar</b></div><div class="data-row"><span>Capital</span><b>Datos pendientes</b></div></div><div class="panel-section"><div class="section-title">Últimos acontecimientos</div><div id="event-log">${state.events.slice(-5).reverse().map(x=>'• '+x).join('<br>')}</div></div>`;
+ if(tab==='Economía')content=common+`<div class="panel-section"><div class="section-title">Indicadores económicos</div>${[['Ingresos fiscales','En desarrollo'],['Gastos públicos','En desarrollo'],['Deuda pública','En desarrollo'],['Inflación','En desarrollo'],['Desempleo','En desarrollo'],['Industria','En desarrollo'],['Energía','En desarrollo']].map(x=>`<div class="data-row"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`;
+ if(tab==='Militar')content=`<div class="panel-section"><div class="section-title">Fuerzas armadas</div><div class="data-row"><span>Divisiones estimadas</span><b>${state.army}</b></div>${[['Infantería','Disponible en próxima actualización'],['Blindados','—'],['Aviación','—'],['Marina','—'],['Logística','—']].map(x=>`<div class="data-row"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`;
+ if(tab==='Diplomacia')content=`<div class="panel-section"><div class="section-title">Relaciones internacionales</div><div class="data-row"><span>Relación global</span><b>${state.relations}/100</b></div><p style="font-size:11px;color:#aeb8c1">Selecciona un país en el mapa para inspeccionarlo. Los tratados y las alianzas se incorporarán al sistema diplomático.</p></div>`;
+ if(tab==='Gobierno')content=common+`<div class="panel-section"><div class="section-title">Administración</div><div class="data-row"><span>Estabilidad política</span><b>${state.stability}%</b></div><div class="data-row"><span>Popularidad</span><b>—</b></div><div class="data-row"><span>Legitimidad</span><b>—</b></div></div>`;
+ if(tab==='Acciones')content=`<div class="panel-section"><div class="section-title">Acciones nacionales e internacionales</div><div class="action-grid"><button class="action-btn" onclick="openAction('Comercio')">Comerciar</button><button class="action-btn" onclick="openAction('Alianza')">Proponer alianza</button><button class="action-btn" onclick="openAction('Guerra')">Declarar guerra</button><button class="action-btn" onclick="openAction('Tratado')">Proponer tratado</button><button class="action-btn" onclick="openAction('Construcción')">Construir</button><button class="action-btn" onclick="openAction('Investigación')">Investigar</button></div><p style="font-size:10px;color:#9aa6b2;line-height:1.5">Las acciones son una primera interfaz. Sus sistemas completos se incorporarán progresivamente.</p></div>`;
+ if(tab==='Provincias')content=`<div class="panel-section"><div class="section-title">Administración territorial</div><p style="font-size:11px;color:#aeb8c1">La gestión por regiones y provincias está prevista para la siguiente fase. Selecciona países en el mapa para consultar su ficha.</p></div>`;
+ if(tab==='Noticias')content=`<div class="panel-section"><div class="section-title">Registro mundial</div><div id="event-log">${state.events.slice().reverse().map(x=>'• '+x).join('<br>')}</div></div>`;
+ p.innerHTML=content;
+}
+function renderCountryInspection(f){
+ const p=$('panel-content');let isPlayer=getName(f)===getName(player);
+ const flag=flagURL(f);
+ p.innerHTML=`<div class="panel-section"><div class="section-title">${isPlayer?'Tu nación':'Estado seleccionado'}</div>
+ <div class="data-row"><span>Nombre</span><b>${getName(f)}</b></div>
+ <div class="data-row"><span>ISO</span><b>${getISO3(f)||'—'}</b></div>
+ <div class="data-row"><span>Tipo</span><b>${isPlayer?'País del jugador':'Estado extranjero'}</b></div>
+ <div class="data-row"><span>Bandera</span><b>${flag?`<img src="${flag}" style="width:34px;height:22px;vertical-align:middle">`:flagEmoji(f)}</b></div></div>
+ <div class="panel-section"><div class="section-title">Acciones diplomáticas</div><div class="action-grid"><button class="action-btn" onclick="inspectAction('Comerciar','${escapeAttr(getName(f))}')">Comerciar</button><button class="action-btn" onclick="inspectAction('Alianza','${escapeAttr(getName(f))}')">Alianza</button><button class="action-btn" onclick="inspectAction('Guerra','${escapeAttr(getName(f))}')">Guerra</button><button class="action-btn" onclick="inspectAction('Relaciones','${escapeAttr(getName(f))}')">Relaciones</button></div></div>
+ <button class="action-btn" style="width:100%;margin-top:12px" onclick="renderTab('Resumen')">Volver a mi país</button>`;
+}
+function escapeAttr(s){return s.replace(/'/g,"&#39;")}
+function openAction(action){$('modal-title').textContent=action;$('modal-body').innerHTML=`<p>El sistema de ${action.toLowerCase()} se está desarrollando. Esta interfaz formará parte de la gestión completa de WORLD DOMINION.</p><button class="action-btn" onclick="closeModal()">Entendido</button>`;$('modal').style.display='flex'}
+function inspectAction(action,country){$('modal-title').textContent=action+' · '+country;$('modal-body').innerHTML=`<p>Has seleccionado <b>${country}</b> como objetivo para una acción de ${action.toLowerCase()}.</p><p>La resolución diplomática y sus consecuencias se implementarán en la siguiente fase.</p><button class="action-btn" onclick="closeModal()">Cerrar</button>`;$('modal').style.display='flex'}
+function closeModal(){$('modal').style.display='none'}
+function setSpeed(v){speed=v;document.querySelectorAll('.speed').forEach(b=>b.classList.toggle('active',Number(b.dataset.speed)===v))}
+function advanceDay(){
+ if(speed===0)return;
+ for(let i=0;i<speed;i++){gameDate.setDate(gameDate.getDate()+1);state.treasury+=Math.max(5,state.gdp*.002);if(Math.random()<.025){let msg='Se ha registrado un acontecimiento internacional.';state.events.push(msg);if(state.events.length>30)state.events.shift()}}
+ $('date').textContent=gameDate.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();updateTop();
+}
+function saveGame(){let save={playerName:getName(player),state,gameDate:gameDate.toISOString()};localStorage.setItem('worldDominionSave',JSON.stringify(save));showToast('Partida guardada en este navegador')}
+function loadSave(){try{let s=JSON.parse(localStorage.getItem('worldDominionSave'));if(!s)return false;let f=findFeatureByName(s.playerName);if(!f)return false;player=f;state=s.state;gameDate=new Date(s.gameDate);return true}catch(e){return false}}
+$('start-button').addEventListener('click',startGame);
+document.querySelectorAll('.nav-btn[data-tab]').forEach(b=>b.addEventListener('click',()=>renderTab(b.dataset.tab)));
+document.querySelectorAll('.speed').forEach(b=>b.addEventListener('click',()=>setSpeed(Number(b.dataset.speed))));
+$('save-button').addEventListener('click',saveGame);
+$('menu-button').addEventListener('click',()=>{if(confirm('¿Volver al menú principal? Guarda tu partida antes si quieres conservarla.')){if(map){map.remove();map=null}$('game').style.display='none';$('start-screen').style.display='flex';setSpeed(0)}});
+$('modal-close').addEventListener('click',closeModal);
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+setInterval(advanceDay,1000);
+init();
 </script>
-
 </body>
 </html>
